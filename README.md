@@ -1,4 +1,4 @@
-# agentpass-protocol
+# AgentPass-protocol
 ## A proposed authentication standard for autonomous AI agents
 
 **Author:** Marco Rauseo
