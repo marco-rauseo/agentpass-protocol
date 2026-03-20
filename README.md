@@ -44,8 +44,47 @@ Proprietary responses are emerging — Mastercard has announced Agent Pay, Visa 
 The window to establish a neutral, open standard is open now. The question is whether that standard will be defined by a neutral protocol or by the commercial interests of the platforms that build it first.
 
 ## 2. Why Existing Solutions Don't Work
+2.1 OAuth 2.0 and the Human Assumption
+OAuth 2.0 is the most widely deployed authentication protocol on the internet. It powers "Sign in with Google", "Connect with Facebook", and virtually every delegated access flow across modern web applications. It is well-designed, well-documented, and well-understood. It is also structurally incompatible with autonomous AI agents.
+OAuth was designed in 2006 to solve a specific problem: how to allow a third-party application to access a user's resources without requiring the user to share their password. The solution was elegant — redirect the user to the identity provider, ask for explicit consent, issue a token. The entire protocol is built around one assumption: a human being is present at the moment of authentication, capable of reading a consent screen and clicking approve.
+An autonomous agent operating at three in the morning has no human available to complete this flow. It cannot open a browser. It cannot read a consent screen. It cannot click approve. When a receiving system initiates an OAuth flow, the agent has no mechanism to respond. The authentication fails — not because of a bug, not because of a misconfiguration, but because the protocol was never designed for this use case.
+This is not a criticism of OAuth. It is a precise description of its scope. OAuth solved the problem it was designed to solve. Autonomous agents represent a new problem that requires a new solution.
+
+2.2 API Keys and Service Accounts
+When engineers need two systems to communicate without a human in the loop, they typically reach for one of two tools: API keys or service accounts.
+An API key is a static secret — a long string of characters that one system presents to another to identify itself. A service account is a non-human identity created specifically for software processes, used by platforms like AWS, Google Cloud, and Azure to allow programs to access resources without a human logged in.
+Both approaches work for their intended purpose. Neither is sufficient for autonomous AI agents operating in high-stakes environments.
+The fundamental limitation is that API keys and service accounts answer only one question: who are you. They do not answer who authorized you to act right now, what you are permitted to do in this specific context, what your spending limits are, or when your authorization expires. A stolen API key grants permanent access until someone manually revokes it. There is no built-in mechanism to express bounded mandates — an agent authorized to spend up to €5,000 on cloud infrastructure from approved vendors cannot encode that constraint in an API key. The receiving system has no way to know whether the agent presenting the key is acting within its authorized scope or has been compromised and redirected.
+For a world of billions of autonomous agents operating continuously across sensitive systems, static credentials without context are not a security model. They are an assumption of trust with no mechanism for verification.
+
+2.3 Proprietary Solutions and the Fragmentation Problem
+The industry has recognized the authentication gap. Responses are emerging — Mastercard has announced Agent Pay, Visa is developing its own agentic commerce framework, NVIDIA has built NemoClaw as a security layer for OpenClaw deployments.
+Each of these solutions works within its own ecosystem. None of them works universally.
+An autonomous agent operating in the real world does not interact with a single platform. It interacts with dozens — a payment processor, a procurement system, a healthcare records provider, a logistics API, a legal document repository. If each of these systems requires a different proprietary authentication protocol, the agent must support all of them simultaneously. The organization deploying the agent must implement a separate integration for each platform it wants its agents to access. Every new system adds a new integration, a new credential to manage, a new failure point to monitor.
+This is the fragmentation problem. And it compounds over time. As the number of agentic systems grows, the number of proprietary protocols multiplies. Organizations that want to deploy agents across multiple domains face an integration burden that scales with the number of platforms — not with the number of agents.
+History has solved this problem before. HTTP eliminated the fragmentation of competing network protocols. OAuth eliminated the fragmentation of competing authentication flows for human users. In both cases, the solution was not a better proprietary system — it was an open standard that all platforms could adopt without ceding control to a competitor.
+AgentPass proposes the same approach for the agentic economy. Not a proprietary solution that works within one ecosystem. An open standard that works across all of them — so that an agent needs to speak one protocol, not thirty.
 
 ## 3. The AgentPass Solution
+3.1 The Core Concept
+AgentPass solves the authentication gap with a principle borrowed from a familiar human institution: the legal proxy.
+When a person reaches adulthood and needs to authorize someone else to act on their behalf — signing a contract, collecting a document, completing a financial transaction — they issue a formal delegation. The delegation specifies who is authorized to act, on whose behalf, for what specific purpose, and within what limits. The receiving party verifies the delegation without contacting the original issuer. If the document is valid and the scope matches the requested action, the operation proceeds.
+AgentPass applies this principle to autonomous AI agents — with one critical difference. A paper proxy can be forged. An AgentPass Token cannot. It is signed with a private cryptographic key that exists only within the issuing infrastructure. The receiving system verifies the signature using a public key — confirming authenticity instantly, without contacting any external server, and without any possibility of replication by a third party.
+Every organization that deploys an autonomous agent issues it an AgentPass Token — a cryptographically signed digital credential that answers the three questions no receiving system can currently answer: who are you, who authorized you, and what are you permitted to do.
+
+3.2 How It Works
+The flow has three steps.
+An organization decides to deploy an autonomous agent. Before the agent begins operating, the organization registers it with AgentPass and defines its mandate — what the agent is authorized to do, on which systems, within what spending limits, and for what purpose. AgentPass issues the agent a signed credential encoding this mandate.
+When the agent arrives at a receiving system — a supplier portal, a payment processor, a medical records database — it presents its credential. The receiving system verifies it instantly, without contacting any external server. It checks that the credential is authentic, that it has not expired, and that the requested action falls within the authorized scope. If all conditions are met, access is granted. If any condition fails, access is denied.
+The credential is short-lived by design. It expires automatically and is renewed silently by the issuing infrastructure before expiry. At each renewal, AgentPass verifies that the agent is still operating within its authorized mandate. If something appears wrong, renewal is denied and the agent stops functioning — without any human intervention required.
+The receiving system never needs to know who built the agent, which platform it runs on, or how it was trained. It needs to know only three things: that the agent is who it claims to be, that it is authorized to perform the requested action, and that its authorization is current. AgentPass provides all three answers in under one millisecond.
+
+3.3 What AgentPass Does Not Do
+Intellectual honesty requires stating explicitly what AgentPass does not solve.
+AgentPass verifies that an agent is who it claims to be and that it is authorized to perform the actions it requests. It does not verify that the agent is behaving correctly once access is granted. A legitimate agent that has been compromised through prompt injection — manipulated by malicious instructions embedded in data it processes — will present a valid token and receive access. The damage it causes will be attributable and auditable, but not prevented at the point of entry.
+AgentPass does not replace endpoint security, behavioral monitoring, or anomaly detection systems. It complements them. By establishing a verifiable identity layer, AgentPass transforms an opaque traffic problem into an auditable one — every agent interaction is attributable to a specific organization, every action is traceable to a specific mandate, every unauthorized access attempt is rejectable before any damage occurs.
+The ten-minute renewal window and the behavioral check at renewal represent AgentPass's contribution to the broader security stack — a structural bound on the damage window of any compromised credential, combined with a mandatory checkpoint at which anomalous behavior can be detected and access terminated.
+
 
 ## 4. Technical Architecture
 
