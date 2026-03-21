@@ -86,11 +86,54 @@ AgentPass does not replace endpoint security, behavioral monitoring, or anomaly 
 The ten-minute renewal window and the behavioral check at renewal represent AgentPass's contribution to the broader security stack — a structural bound on the damage window of any compromised credential, combined with a mandatory checkpoint at which anomalous behavior can be detected and access terminated.
 
 
-## 4. Technical Architecture
+## 4. Technical Architecture 
+The AgentPass architecture consists of three components: the AgentPass Token — an open standard implementable by any party — the AgentPass Identity Provider — the enterprise service operated by AgentPass Inc. that issues and renews tokens — and Agent-Gate — the network-layer plugin that enforces token verification at the point of entry. The governance structure that defines the relationship between the open protocol and the commercial infrastructure is described in Section 5.
 
-### 4.1 The AgentPass Token
-### 4.2 Short-lived Tokenization
-### 4.3 Agent-Gate
+4.1 The AgentPass Token
+The AgentPass Token is a JSON Web Token — a standard format for cryptographically signed digital credentials defined in RFC 7519. It consists of three components: a header declaring the signing algorithm, a payload containing the agent's verified claims, and a cryptographic signature that makes the entire structure tamper-proof. Any modification to the payload — even a single character — invalidates the signature and causes the token to be rejected by any compliant receiving system.
+The payload of an AgentPass Token contains the following fields:
+json{
+  "agent_id": "ag_9f2b3c4d",
+  "org": "Acme SpA",
+  "org_verified": true,
+  "scope": ["purchase", "read_catalog"],
+  "max_spend": 5000,
+  "currency": "EUR",
+  "issued_at": 1710000000,
+  "expires_in": 600,
+  "jti": "a7f3c2d1-9b4e-4f8a-b2c6-1d3e5f7a9b0c",
+  "alg": "ES256"
+}
+Each field serves a precise purpose.
+agent_id identifies this specific agent uniquely across the entire AgentPass network. It is assigned at registration and cannot be transferred to a different agent.
+org and org_verified identify the organization that deployed the agent and confirm that the organization has completed AgentPass identity verification. A token with org_verified set to false will be rejected by Agent-Gate compliant systems.
+scope defines the exact set of actions the agent is authorized to perform. Receiving systems are expected to enforce scope — an agent presenting a token with scope limited to read_catalog cannot execute a purchase, regardless of what it requests.
+max_spend and currency encode the spending limit directly into the token. This limit is enforced at the protocol level. A receiving system that processes a transaction exceeding max_spend in violation of the token scope generates cryptographic evidence of the mandate violation — simplifying dispute resolution and audit without requiring AgentPass to make legal determinations.
+issued_at records the exact timestamp of token issuance in Unix time. Receiving systems should reject tokens with issued_at values in the future or more than sixty seconds in the past, preventing clock-skew attacks.
+expires_in defines the token lifetime in seconds. The standard AgentPass token lifetime is 600 seconds — ten minutes. The rationale for this duration is described in Section 4.2.
+jti is a globally unique identifier for this specific token instance. Receiving systems that cache used jti values can reject replay attacks — attempts to reuse a previously presented token — even within the validity window. No two AgentPass tokens share the same jti value.
+alg declares the cryptographic signing algorithm. AgentPass uses ES256 — ECDSA with P-256 curve and SHA-256 hash — the same standard used by Apple Pay, modern TLS certificates, and the majority of high-security authentication systems deployed at scale.
+Verification is performed locally by the receiving system using the AgentPass public key. No network call is required. No central server is queried. Verification completes in under one millisecond. If the AgentPass Identity Provider is temporarily unavailable, previously issued tokens remain verifiable until their expiration — there is no single point of failure in the verification path.
+
+4.2 Short-lived Tokenization
+The ten-minute token lifetime is not an arbitrary choice. It is the result of a deliberate tradeoff between three competing requirements: security, network overhead, and operational continuity.
+Traditional credential systems address compromised credentials through revocation — maintaining a Certificate Revocation List or an Online Certificate Status Protocol endpoint that receiving systems query in real time to check whether a credential has been invalidated. This approach has two structural problems. First, it introduces latency — every verification requires a network round-trip to the revocation server. Second, it creates a single point of failure — if the revocation server is unavailable, receiving systems must choose between failing open (accepting potentially revoked credentials) or failing closed (rejecting all credentials). Neither option is acceptable in high-stakes agentic environments.
+AgentPass eliminates the need for revocation infrastructure by making credentials short-lived enough that revocation becomes unnecessary for most threat scenarios. A stolen token expires within ten minutes. A compromised agent stops functioning within ten minutes of its last successful renewal. The damage window is mathematically bounded without requiring any real-time infrastructure.
+Ten minutes represents the boundary point at which this tradeoff is optimal. Shorter lifetimes — one minute, thirty seconds — would reduce the damage window further but increase renewal frequency to a level that creates measurable network overhead at scale. Longer lifetimes — one hour, one day — would reduce renewal overhead but reintroduce meaningful damage windows that approach those of traditional static credentials.
+Renewal is silent and proactive. At minute eight of each ten-minute window, the AgentPass Identity Provider generates a new token and delivers it to the agent before the current token expires. The agent never experiences an interruption in service. From the perspective of receiving systems, the agent presents a continuously valid credential.
+The renewal moment is the primary security checkpoint in the AgentPass architecture. Behavioral verification at renewal is performed by the AgentPass Identity Provider — not by the deploying organization. This design choice is deliberate: an organization cannot objectively monitor its own agents for compliance with the same rigor that an independent third party can apply. By placing the renewal decision with a neutral infrastructure operator, AgentPass ensures that the monitoring function is structurally independent of the entity that benefits from the agent's operation.
+To address privacy and decentralization concerns, the behavioral verification process operates on anonymized telemetry signals — aggregate behavioral metadata transmitted by Agent-Gate at the network layer. The Identity Provider receives pattern signals: request volume, action type distribution, scope consistency, and anomaly indicators. It does not receive the content of agent requests, the data exchanged between agent and receiving system, or any information that would allow reconstruction of individual transactions. AgentPass is not a point of interception. It is a point of pattern verification.
+At each renewal, the AgentPass Identity Provider evaluates the agent's activity over the preceding ten minutes against its declared mandate. Anomaly indicators include action volume outside expected parameters, requests for resources outside the declared scope, geographic or network origin inconsistencies, and interaction patterns consistent with prompt injection. If the behavioral profile exceeds the anomaly threshold, renewal is denied. The current token expires at its scheduled time and the agent ceases to function without requiring any manual intervention.
+
+4.3 Agent-Gate
+Agent-Gate is the distribution mechanism that transforms AgentPass from a protocol into a network effect.
+The adoption problem for any authentication standard is bilateral: both the entities issuing credentials and the entities verifying them must adopt the protocol for it to have value. Historically, this chicken-and-egg problem has been solved either by regulatory mandate — forcing adoption through compliance requirements — or by platform leverage — a dominant platform requiring adoption as a condition of access.
+Agent-Gate addresses the adoption problem from the receiving side through integration with existing network infrastructure. It is implemented as a plugin for major Content Delivery Networks and Web Application Firewalls — Cloudflare Workers, AWS WAF, Akamai Edge — that already process a significant fraction of global internet traffic. A system operator that deploys Agent-Gate does not modify their backend infrastructure. They add a rule to their existing network layer.
+Agent-Gate classifies all incoming traffic into two categories based on the presence and validity of an AgentPass Token.
+Traffic presenting a valid AgentPass Token receives preferential treatment: direct API access, structured data responses, reduced rate limiting, and priority routing. This is the fast lane — optimized for legitimate autonomous agents operating within verified mandates.
+Traffic that does not present a valid AgentPass Token — or presents an invalid, expired, or unrecognized token — is routed to the slow lane: aggressive rate limiting, CAPTCHA challenges, degraded data responses, and increased latency. This traffic is not blocked. It is penalized.
+The distinction between blocking and penalizing is architecturally significant. Blocking unauthenticated agent traffic would create friction for legitimate use cases that have not yet adopted AgentPass and would invite legal challenges in jurisdictions with open access requirements. Penalizing unauthenticated traffic creates an economic incentive — an agent operating in the slow lane incurs a cost in time and computational resources that makes AgentPass adoption the rational choice for any organization deploying agents at scale.
+The deployment path for Agent-Gate is a single partnership rather than thousands of individual sales. Cloudflare serves approximately 20% of global internet traffic. A technical partnership that makes Agent-Gate available as a native Cloudflare Worker reduces the adoption barrier for receiving systems from a custom integration project to a configuration toggle. This distribution model is the primary mechanism by which AgentPass can achieve network-scale adoption within the 18-to-24-month window before proprietary alternatives reach comparable distribution.
 
 ## 5. Governance Model
 
