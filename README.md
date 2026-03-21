@@ -35,8 +35,8 @@ The result is a forced binary choice that no receiving system should have to mak
 The broader cybersecurity context in which autonomous agents operate is already under extreme pressure. According to IBM's 2025 Cost of a Data Breach Report, the average cost of a healthcare breach has exceeded $7.4 million — the highest of any industry for fourteen consecutive years. Of organizations that reported AI-related security incidents, 97% lacked proper AI access controls at the time of the breach. Healthcare breaches take an average of 279 days to identify and contain. According to CrowdStrike's 2026 Global Threat Report, AI-enabled adversarial operations increased 89% year-over-year, with the average breakout time — the window between initial system access and lateral movement to critical assets — falling to 29 minutes in 2025, 65% faster than the previous year.
 
 According to Unit 42, the mean time to exfiltrate data has already fallen from nine days in 2021 to 30 minutes in 2025.
-
-These figures reflect attacks that still involved significant human coordination.According to ThreatDown's 2026 State of Malware Report, 2025 delivered the first confirmed cases of AI-orchestrated attacks at scale. In August 2025, Anthropic documented a threat actor using an autonomous AI agent to conduct reconnaissance across thousands of VPN endpoints, harvest credentials, penetrate networks, and generate tailored ransom notes — targeting healthcare and defense organizations simultaneously, without human intervention at each step. Autonomous AI agents operate without human cognitive limitations — no fatigue, no hesitation, no operational errors. They can run multiple simultaneous intrusions autonomously, create exploits from patches in minutes, and operate continuously across every system they are authorized to touch.
+These figures reflect attacks that still involved significant human coordination.According to ThreatDown's 2026 State of Malware Report, 2025 delivered the first confirmed cases of AI-orchestrated attacks at scale. In August 2025, Anthropic documented a cybercriminal using Claude Code to conduct large-scale extortion across at least 17 organizations — including healthcare, emergency services, and government institutions — automating reconnaissance, credential harvesting, network penetration, and the generation of targeted ransom notes demanding up to $500,000. In September 2025, Anthropic disclosed a separate state-sponsored campaign in which a Chinese threat actor manipulated Claude Code to execute 80-90% of a cyberattack autonomously against 30 global targets, representing the first documented case of a large-scale cyberattack largely executed without human intervention.
+Autonomous AI agents operate without human cognitive limitations — no fatigue, no hesitation, no operational errors. They can run multiple simultaneous intrusions autonomously, create exploits from patches in minutes, and operate continuously across every system they are authorized to touch.
 
 This does not mean AgentPass eliminates all attack vectors in agentic systems. It eliminates the most fundamental and most scalable one: the ability of unauthorized agents to impersonate legitimate ones. A receiving system that cannot verify who sent an agent, whether that agent is authorized, and what it is permitted to do, cannot distinguish a legitimate request from a fraudulent one — regardless of how sophisticated its downstream defenses are. AgentPass addresses the problem at the point of entry, before any action is permitted, not after damage has occurred.
 The future of financial fraud will not arrive wearing a mask and carrying a weapon. It will arrive as a well-formed API request from an agent that no receiving system can distinguish from a legitimate one.
@@ -90,9 +90,17 @@ The ten-minute renewal window and the behavioral check at renewal represent Agen
 The AgentPass architecture consists of three components: the AgentPass Token — an open standard implementable by any party — the AgentPass Identity Provider — the enterprise service operated by AgentPass Inc. that issues and renews tokens — and Agent-Gate — the network-layer plugin that enforces token verification at the point of entry. The governance structure that defines the relationship between the open protocol and the commercial infrastructure is described in Section 5.
 
 4.1 The AgentPass Token
-The AgentPass Token is a JSON Web Token — a standard format for cryptographically signed digital credentials defined in RFC 7519. It consists of three components: a header declaring the signing algorithm, a payload containing the agent's verified claims, and a cryptographic signature that makes the entire structure tamper-proof. Any modification to the payload — even a single character — invalidates the signature and causes the token to be rejected by any compliant receiving system.
-The payload of an AgentPass Token contains the following fields:
-json{
+The AgentPass Token is a JSON Web Token — a standard format for cryptographically signed digital credentials defined in RFC 7519. It consists of three components: a header declaring the signing algorithm and token type, a payload containing the agent's verified claims, and a cryptographic signature that makes the entire structure tamper-proof. Any modification to either the header or the payload — even a single character — invalidates the signature and causes the token to be rejected by any compliant receiving system.
+A complete AgentPass Token is structured as follows:
+json
+```// Header
+{
+  "alg": "ES256",
+  "typ": "JWT"
+}
+
+// Payload
+{
   "agent_id": "ag_9f2b3c4d",
   "org": "Acme SpA",
   "org_verified": true,
@@ -101,10 +109,10 @@ json{
   "currency": "EUR",
   "issued_at": 1710000000,
   "expires_in": 600,
-  "jti": "a7f3c2d1-9b4e-4f8a-b2c6-1d3e5f7a9b0c",
-  "alg": "ES256"
-}
-Each field serves a precise purpose.
+  "jti": "a7f3c2d1-9b4e-4f8a-b2c6-1d3e5f7a9b0c"
+}```
+The header declares the signing algorithm and token type. The payload contains the agent's verified claims. Both are base64url-encoded and concatenated with the cryptographic signature to form the complete token string transmitted by the agent at the point of entry.
+Each payload field serves a precise purpose.
 agent_id identifies this specific agent uniquely across the entire AgentPass network. It is assigned at registration and cannot be transferred to a different agent.
 org and org_verified identify the organization that deployed the agent and confirm that the organization has completed AgentPass identity verification. A token with org_verified set to false will be rejected by Agent-Gate compliant systems.
 scope defines the exact set of actions the agent is authorized to perform. Receiving systems are expected to enforce scope — an agent presenting a token with scope limited to read_catalog cannot execute a purchase, regardless of what it requests.
@@ -112,7 +120,7 @@ max_spend and currency encode the spending limit directly into the token. This l
 issued_at records the exact timestamp of token issuance in Unix time. Receiving systems should reject tokens with issued_at values in the future or more than sixty seconds in the past, preventing clock-skew attacks.
 expires_in defines the token lifetime in seconds. The standard AgentPass token lifetime is 600 seconds — ten minutes. The rationale for this duration is described in Section 4.2.
 jti is a globally unique identifier for this specific token instance. Receiving systems that cache used jti values can reject replay attacks — attempts to reuse a previously presented token — even within the validity window. No two AgentPass tokens share the same jti value.
-alg declares the cryptographic signing algorithm. AgentPass uses ES256 — ECDSA with P-256 curve and SHA-256 hash — the same standard used by Apple Pay, modern TLS certificates, and the majority of high-security authentication systems deployed at scale.
+The signing algorithm declared in the header is ES256 — ECDSA with P-256 curve and SHA-256 hash — the same standard used by Apple Pay, modern TLS certificates, and the majority of high-security authentication systems deployed at scale.
 Verification is performed locally by the receiving system using the AgentPass public key. No network call is required. No central server is queried. Verification completes in under one millisecond. If the AgentPass Identity Provider is temporarily unavailable, previously issued tokens remain verifiable until their expiration — there is no single point of failure in the verification path.
 
 4.2 Short-lived Tokenization
