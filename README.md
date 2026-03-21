@@ -92,13 +92,12 @@ The AgentPass architecture consists of three components: the AgentPass Token —
 4.1 The AgentPass Token
 The AgentPass Token is a JSON Web Token — a standard format for cryptographically signed digital credentials defined in RFC 7519. It consists of three components: a header declaring the signing algorithm and token type, a payload containing the agent's verified claims, and a cryptographic signature that makes the entire structure tamper-proof. Any modification to either the header or the payload — even a single character — invalidates the signature and causes the token to be rejected by any compliant receiving system.
 A complete AgentPass Token is structured as follows:
-json
-```// Header
+```json
+// Header
 {
   "alg": "ES256",
   "typ": "JWT"
 }
-
 // Payload
 {
   "agent_id": "ag_9f2b3c4d",
@@ -110,7 +109,8 @@ json
   "issued_at": 1710000000,
   "expires_in": 600,
   "jti": "a7f3c2d1-9b4e-4f8a-b2c6-1d3e5f7a9b0c"
-}```
+}
+```
 The header declares the signing algorithm and token type. The payload contains the agent's verified claims. Both are base64url-encoded and concatenated with the cryptographic signature to form the complete token string transmitted by the agent at the point of entry.
 Each payload field serves a precise purpose.
 agent_id identifies this specific agent uniquely across the entire AgentPass network. It is assigned at registration and cannot be transferred to a different agent.
