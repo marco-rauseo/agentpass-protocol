@@ -241,5 +241,117 @@ The three tiers map to deployment maturity. Startups and SMEs use Tier 1 — the
 
 
 ## 8. Open Questions
+8.1 — Federated Node Governance
+The three-tier availability model described in Section 7.5 proposes federation as the solution to the Identity Provider single point of failure. Federation introduces its own governance challenge: who has the authority to certify a new IdP node as a legitimate participant in the AgentPass network? How is a compromised regional node revoked instantly without isolating the legitimate agents that depend on it for renewal? A node revocation mechanism that operates faster than the ten-minute token expiration window is required — but no such mechanism is specified in this version of the protocol. This is a priority item for AgentPass v2.
+8.2 — Bootstrap Risk in Phase One
+The full three-tier availability architecture — Global Federation, Emergency Grace Period, and On-Premise Certified Issuers — requires significant engineering investment to implement. In the period between the protocol's public release and the full deployment of Tier 2 and Tier 3 infrastructure, AgentPass operates on a partially centralized architecture. A significant downtime event during this bootstrap window could damage the protocol's reputation before it has achieved sufficient adoption to survive the disruption. Mitigating bootstrap risk requires an explicit commitment to a deployment timeline for Tier 2 and Tier 3 infrastructure, communicated transparently to early enterprise adopters.
+8.3 — Behavioral Verification at Scale
+The renewal-time behavioral verification described in Section 4.2 requires the AgentPass Identity Provider to analyze telemetry signals from potentially millions of agents simultaneously, every ten minutes. The computational cost of this analysis at global scale is not yet quantified. It is possible that the differential privacy noise required to protect telemetry anonymization reduces the accuracy of anomaly detection to a level that makes behavioral verification operationally ineffective. The tradeoff between privacy preservation and detection accuracy at scale is an open engineering problem that requires empirical measurement rather than theoretical analysis.
+8.4 — Identity Inflation and Authentication DDoS
+If the cost of registering an AgentPass identity is too low — in time, money, or verification effort — an attacker could generate millions of technically authenticated but disposable agent identities. These agents would carry valid tokens, pass Agent-Gate's fast lane, and saturate receiving systems with legitimate-looking but malicious traffic. The current protocol does not specify minimum requirements for identity registration friction. Defining a registration cost model that is low enough for legitimate adopters but high enough to make large-scale identity inflation economically unviable is an open problem.
+
+Advanced Security
+8.5 — Agent-in-the-Middle
+An authenticated agent with a valid AgentPass Token could act as a proxy — forwarding requests from thousands of unauthenticated agents to receiving systems under the cover of its own valid credential. From AgentPass's perspective, only one authenticated agent is present. From the receiving system's perspective, only one authenticated agent is present. The actual traffic volume and behavioral pattern would reveal the proxy — but only if behavioral anomaly detection is sensitive enough to detect it. This attack vector is not addressed by the current protocol and represents a significant gap in the security model for high-value receiving systems.
+8.6 — Semantic Drift of Mandates
+AgentPass Tokens encode mandates in structured fields — scope, max_spend, permitted systems. These fields are defined with the semantics of today's AI capabilities. As large language models become more capable, the actions that fall within a given scope definition may expand significantly. An agent authorized today to "read and summarize documents" may, in two years, be capable of extracting, correlating, and exfiltrating sensitive information through actions that technically comply with the original scope definition. The protocol does not currently address how mandate semantics are versioned or how organizations are notified when capability evolution causes scope definitions to become inadequate. This is a fundamental challenge for any mandate-based authorization system operating in a rapidly evolving capability landscape.
+8.7 — Recursive Delegation and Chain of Custody
+Complex agentic workflows involve chains of delegation — Agent A, operating under a mandate from Organization X, delegates a subtask to Agent B operated by Organization Y, which in turn delegates to Agent C. The current protocol is designed for point-to-point authentication between a single agent and a receiving system. It does not specify how mandates are transferred, scoped, or attenuated through delegation chains. It does not specify how legal responsibility is attributed when damage occurs three steps down a delegation chain. Recursive delegation is already occurring in production agentic systems. The protocol's silence on this topic is a gap that will become increasingly significant as multi-agent workflows become the norm.
+
+Global Governance
+8.8 — Cross-Certification and Sovereign Fragmentation
+Section 7.5 describes On-Premise Certified Issuers as a solution for organizations that require operational sovereignty. The same logic applies at the national level — governments may require that agent authentication for systems operating within their jurisdiction uses a nationally controlled root key rather than a Foundation-managed one. If multiple national AgentPass instances operate with incompatible root keys, an agent authenticated by the EU instance cannot be verified by a system that trusts only the US instance. A cross-certification mechanism — analogous to the international mutual recognition agreements used in the HTTPS certificate ecosystem — is required to prevent the fragmentation of the agentic economy along geopolitical lines. No such mechanism is specified in this version of the protocol.
+8.9 — The Competing Standard Risk
+The window between AgentPass's public release and the point at which it achieves sufficient adoption to be self-sustaining is the period of maximum vulnerability. During this window, a coordinated effort by major AI platforms — OpenAI, Microsoft, Google, Amazon — to launch a competing standard integrated into their existing identity infrastructure could prevent AgentPass from reaching critical mass. The regulatory lever described in Section 6 is the primary mitigation — European enterprise adoption driven by EU AI Act compliance requirements creates commercial pressure that the large platforms cannot ignore. However, the effectiveness of this mitigation depends on the speed of EU AI Act enforcement and the willingness of European enterprises to require AgentPass tokens as a contractual condition of agent access. Neither is guaranteed. This risk is acknowledged as the primary existential threat to AgentPass adoption and is not fully resolved by the current protocol or go-to-market strategy.
+8.10 — Financial Independence of the Foundation
+The AgentPass Foundation's neutrality depends on its financial independence from the entities it governs. If the Foundation's operating budget is funded primarily by membership fees from large technology companies, those companies gain disproportionate influence over the governance process — a dynamic known as regulatory capture. A Foundation that depends on Google's membership fee cannot credibly resist Google's influence over protocol development. Alternative funding models — including transaction-based micro-fees on enterprise AgentPass Inc. revenue, public research grants, and government contributions from jurisdictions that benefit from the standard — should be explored to ensure that the Foundation's financial structure is consistent with its governance mandate. This question is unresolved in the current governance model.
 
 ## 9. References
+9. References
+Standards and Specifications
+[1] RFC 6749 — The OAuth 2.0 Authorization Framework
+    Hardt, D. (Ed.), Internet Engineering Task Force, October 2012
+    https://datatracker.ietf.org/doc/html/rfc6749
+
+[2] RFC 6750 — The OAuth 2.0 Authorization Framework: Bearer Token Usage
+    Jones, M., Hardt, D., Internet Engineering Task Force, October 2012
+    https://datatracker.ietf.org/doc/html/rfc6750
+
+[3] RFC 7519 — JSON Web Token (JWT)
+    Jones, M., Bradley, J., Sakimura, N., Internet Engineering Task Force, May 2015
+    https://datatracker.ietf.org/doc/html/rfc7519
+
+[4] RFC 7515 — JSON Web Signature (JWS)
+    Jones, M., Bradley, J., Sakimura, N., Internet Engineering Task Force, May 2015
+    https://datatracker.ietf.org/doc/html/rfc7515
+
+Regulatory and Legal Frameworks
+[5] Regulation (EU) 2024/1689 — Artificial Intelligence Act
+    European Parliament and Council, 12 July 2024
+    https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689
+
+[6] EU AI Act — Article 26: Obligations of Deployers of High-Risk AI Systems
+    European Parliament and Council, 2024
+    https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689
+
+[7] General-Purpose AI Code of Practice — Final Version
+    European AI Office, European Commission, 10 July 2025
+    https://digital-strategy.ec.europa.eu/en/policies/ai-code-practice
+
+[8] European AI Office — Establishment Decision
+    European Commission DG CONNECT, 24 January 2024
+    https://digital-strategy.ec.europa.eu/en/policies/ai-office
+
+Security Research and Industry Reports
+[9] Cost of a Data Breach Report 2025
+    IBM Security, 2025
+    https://www.ibm.com/reports/data-breach
+
+[10] 2026 Global Threat Report
+     CrowdStrike, 2026
+     https://www.crowdstrike.com/global-threat-report
+
+[11] 2026 State of Malware Report
+     ThreatDown by Malwarebytes, 2026
+     https://www.threatdown.com/state-of-malware
+
+[12] Unit 42 Incident Response Report 2025
+     Palo Alto Networks Unit 42, 2025
+     https://unit42.paloaltonetworks.com/incident-response-report
+
+[13] Claude Usage Policy — Misuse Documentation
+     Anthropic, August 2025
+     https://www.anthropic.com/usage-policy
+
+Market Research
+[14] AI Agents in Financial Services: Market Forecast 2025-2030
+     Multiple sources including Workday Research and MarketsandMarkets, 2025
+
+[15] Confidential Computing Market Report 2025
+     Market research aggregators, 2025
+     Projected market size: $5.8 billion, 38% CAGR
+
+Industry Announcements and Precedents
+[16] Mastercard Agent Pay — Agentic Commerce Framework
+     Mastercard Newsroom, 2025
+     https://www.mastercard.com/news
+
+[17] NVIDIA NemoClaw — Security Layer for OpenClaw
+     NVIDIA Developer Blog, 2025
+     https://developer.nvidia.com
+
+[18] HashiCorp License Change — Mozilla Public License to Business Source License
+     HashiCorp Blog, 10 August 2023
+     https://www.hashicorp.com/blog/hashicorp-adopts-business-source-license
+
+[19] OpenTofu — Linux Foundation Acceptance
+     Linux Foundation, 20 September 2023
+     https://opentofu.org
+
+[20] IBM Acquisition of HashiCorp
+     IBM Press Release, announced April 2024, completed February 2025
+     https://www.ibm.com/investor/att/pdf/hashicorp-acquisition.pdf
+
+[21] OpenClaw — Autonomous AI Agent
+     Peter Steinberger, 2025
+     https://openclaw.ai
