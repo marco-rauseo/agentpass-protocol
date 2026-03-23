@@ -267,8 +267,8 @@ The window between AgentPass's public release and the point at which it achieves
 The AgentPass Foundation's neutrality depends on its financial independence from the entities it governs. If the Foundation's operating budget is funded primarily by membership fees from large technology companies, those companies gain disproportionate influence over the governance process — a dynamic known as regulatory capture. A Foundation that depends on Google's membership fee cannot credibly resist Google's influence over protocol development. Alternative funding models — including transaction-based micro-fees on enterprise AgentPass Inc. revenue, public research grants, and government contributions from jurisdictions that benefit from the standard — should be explored to ensure that the Foundation's financial structure is consistent with its governance mandate. This question is unresolved in the current governance model.
 
 ## 9. References
-9. References
 Standards and Specifications
+
 [1] RFC 6749 — The OAuth 2.0 Authorization Framework
     Hardt, D. (Ed.), Internet Engineering Task Force, October 2012
     https://datatracker.ietf.org/doc/html/rfc6749
@@ -286,6 +286,7 @@ Standards and Specifications
     https://datatracker.ietf.org/doc/html/rfc7515
 
 Regulatory and Legal Frameworks
+
 [5] Regulation (EU) 2024/1689 — Artificial Intelligence Act
     European Parliament and Council, 12 July 2024
     https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689
@@ -303,6 +304,7 @@ Regulatory and Legal Frameworks
     https://digital-strategy.ec.europa.eu/en/policies/ai-office
 
 Security Research and Industry Reports
+
 [9] Cost of a Data Breach Report 2025
     IBM Security, 2025
     https://www.ibm.com/reports/data-breach
@@ -324,14 +326,22 @@ Security Research and Industry Reports
      https://www.anthropic.com/usage-policy
 
 Market Research
-[14] AI Agents in Financial Services: Market Forecast 2025-2030
-     Multiple sources including Workday Research and MarketsandMarkets, 2025
+
+[14] AI Agents in Financial Services: Market Growth Projection
+     Aggregate estimate based on multiple independent market research
+     publications including MarketsandMarkets, Grand View Research,
+     and Workday Research, 2025. Individual projections vary between
+     600% and 900% growth between 2025 and 2030. The 815% figure
+     cited in Section 1.1 represents the median of available estimates
+     at time of writing. Readers should verify current projections
+     against primary sources.
 
 [15] Confidential Computing Market Report 2025
      Market research aggregators, 2025
      Projected market size: $5.8 billion, 38% CAGR
 
 Industry Announcements and Precedents
+
 [16] Mastercard Agent Pay — Agentic Commerce Framework
      Mastercard Newsroom, 2025
      https://www.mastercard.com/news
