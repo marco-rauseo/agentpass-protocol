@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentPass Protocol Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "framer-motion": "https://esm.sh/framer-motion@11.0.8?deps=react@18.2.0",
+        "react-simple-maps": "https://esm.sh/react-simple-maps@3.0.0?deps=react@18.2.0"
+      }
+    }
+    </script>
+</head>
+<body class="bg-[#0a0f1a] text-[#f9fafb] m-0 p-0 overflow-x-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { motion, AnimatePresence } from 'framer-motion';
+        import { ComposableMap, Geographies, Geography, Annotation, Line, Marker } from 'react-simple-maps';
+
+        // Espongo le librerie globalmente per il codice JSX transpilato
+        window.React = React;
+        window.useState = useState;
+        window.useEffect = useEffect;
+        window.useRef = useRef;
+        window.motion = motion;
+        window.AnimatePresence = AnimatePresence;
+        window.ComposableMap = ComposableMap;
+        window.Geographies = Geographies;
+        window.Geography = Geography;
+        window.Annotation = Annotation;
+        window.Line = Line;
+        window.Marker = Marker;
+
+        async function init() {
+            try {
+                const res = await fetch('./AgentPassDemo.jsx');
+                if (!res.ok) throw new Error("AgentPassDemo.jsx non trovato");
+                let code = await res.text();
+                
+                // Rimuoviamo gli import ES6 perché gestiamo tutto globalmente nel browser
+                code = code.replace(/import\s+.*?;/g, '');
+                // Trasformiamo l'export in un'assegnazione globale
+                code = code.replace(/export\s+default\s+function\s+AgentPassDemo/, 'window.AgentPassDemo = function AgentPassDemo');
+
+                // Transpilazione JSX -> JS nativo
+                const transpiled = Babel.transform(code, { presets: ['react'] }).code;
+                
+                // Esecuzione dello script nel contesto della finestra
+                eval(transpiled);
+
+                // Mount dell'app
+                const root = createRoot(document.getElementById('root'));
+                root.render(React.createElement(window.AgentPassDemo));
+            } catch (err) {
+                console.error(err);
+                document.getElementById('root').innerHTML = `<div style="padding: 20px; color: red;">Errore durante il caricamento: ${err.message}</div>`;
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
