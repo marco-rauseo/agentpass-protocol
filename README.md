@@ -66,6 +66,14 @@ This is the fragmentation problem. And it compounds over time. As the number of 
 History has solved this problem before. HTTP eliminated the fragmentation of competing network protocols. OAuth eliminated the fragmentation of competing authentication flows for human users. In both cases, the solution was not a better proprietary system — it was an open standard that all platforms could adopt without ceding control to a competitor.
 AgentPass proposes the same approach for the agentic economy. Not a proprietary solution that works within one ecosystem. An open standard that works across all of them — so that an agent needs to speak one protocol, not thirty.
 
+2.4 The Neutrality Problem
+Proprietary solutions fail not only because of fragmentation. They fail for a more fundamental reason: no AI platform can be the neutral authentication authority for the agents it produces.
+If Anthropic manages authentication for agents built on Claude, Anthropic knows who deploys which agents, which systems they operate on, what they are authorized to do, and when they act. This creates three structural problems that no regulated institution can accept.
+Competitive surveillance. A bank using Claude agents authenticated by Anthropic is communicating its internal operational workflows to Anthropic. That data has competitive value — for model training, for market intelligence, for favoring competitors.
+Structural vendor lock-in. If agent identity is issued by the vendor that built the agent, migrating to an alternative provider means losing the entire authentication infrastructure. This is precisely the kind of dependency that regulated institutions are required by policy to avoid.
+Regulatory conflict. The EU AI Act requires independent human oversight of high-risk AI systems. An organization that entrusts the authentication of its agents to the vendor that built them cannot demonstrate supervisory independence — this is a structural compliance problem, not an interpretive one.
+The history of internet infrastructure provides the answer. SSL certificates are not issued by Google or Apple. DNS is not managed by Amazon. TCP/IP does not belong to Microsoft. Infrastructure neutrality is not an ethical value — it is the functional prerequisite for universal adoption. AgentPass is designed on this principle from its first version.
+
 ## 3. The AgentPass Solution
 3.1 The Core Concept
 AgentPass solves the authentication gap with a principle borrowed from a familiar human institution: the legal proxy.
