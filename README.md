@@ -15,6 +15,7 @@
 
 ---
 ### How it works
+
 ```mermaid
 graph LR
     A[AI Agent] -->|1. Request Token| B(Issuer Service)
