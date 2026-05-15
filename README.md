@@ -14,13 +14,15 @@
 ![Focus](https://img.shields.io/badge/Focus-AI_Agents-brightgreen)
 
 ---
-graph TD
-    A[Agent Autonomo] -->|1. Richiede Token| B(Issuer Service)
-    B -->|2. Rilascia JWT /10 min/| A
-    A -->|3. Invia Task + Token| C[Sistema Target]
-    C -->|4. Verifica Locale| C
-    C -->|5. Esecuzione Azione| D[Successo]
-    
+### How it works
+```mermaid
+graph LR
+    A[AI Agent] -->|1. Request Token| B(Issuer Service)
+    B -->|2. Issue JWT /10 min/| A
+    A -->|3. Task + Token| C[Target System]
+    C -->|4. Local Verification| C
+    C -->|5. Execution| D[Success]
+
     style B fill:#f9f,stroke:#333,stroke-width:2px
     style C fill:#bbf,stroke:#333,stroke-width:2px
     
