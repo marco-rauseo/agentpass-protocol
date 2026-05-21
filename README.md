@@ -14,7 +14,7 @@
 ![Focus](https://img.shields.io/badge/Focus-AI_Agents-brightgreen)
 
 ---
-![AgentPass](agentpass-banner.png)
+![AgentPass](23ACBFB3-34DA-4A98-9D25-BEC9E977A46D.PNG)
 ## Abstract 
 Autonomous AI agents are no longer a research concept. Systems like OpenClaw are already operating autonomously across finance, enterprise procurement, and healthcare — monitoring markets, executing predefined strategies, processing claims, and accessing sensitive records — with the boundary between assisted and fully autonomous action eroding rapidly. This shift introduces a critical infrastructure gap: no standardized protocol exists to answer the three fundamental questions that receiving systems must resolve before granting access to an autonomous agent — who are you, who authorized you, and what are you permitted to do.
 Existing authentication standards, including OAuth 2.0 and OpenID Connect, were designed for human-in-the-loop interactions. They presuppose a human present to approve access at the moment of authentication — typically through a browser redirect and explicit user consent. Autonomous agents operate continuously and independently, with no human available to complete an interactive authentication flow. This is not a limitation of implementation. It is a structural incompatibility.
